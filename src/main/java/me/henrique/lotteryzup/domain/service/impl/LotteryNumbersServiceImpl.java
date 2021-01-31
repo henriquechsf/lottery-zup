@@ -1,28 +1,33 @@
 package me.henrique.lotteryzup.domain.service.impl;
 
+import me.henrique.lotteryzup.domain.entity.LotteryNumbers;
 import me.henrique.lotteryzup.domain.entity.Person;
-import me.henrique.lotteryzup.domain.entity.PlayNumbers;
-import me.henrique.lotteryzup.domain.repository.NumberRepository;
+import me.henrique.lotteryzup.domain.repository.LotteryNumbersRepository;
 import me.henrique.lotteryzup.domain.repository.PersonRepository;
-import me.henrique.lotteryzup.domain.service.NumberService;
+import me.henrique.lotteryzup.domain.service.LotteryNumbersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 @Service
-public class NumberServiceImpl implements NumberService {
+public class LotteryNumbersServiceImpl implements LotteryNumbersService {
 
-    @Autowired
     private PersonRepository personRepository;
+    private LotteryNumbersRepository numbersRepository;
 
-    @Autowired
-    NumberRepository numberRepository;
+    public LotteryNumbersServiceImpl(LotteryNumbersRepository numbersRepository, PersonRepository personRepository) {
+        this.personRepository = personRepository;
+        this.numbersRepository = numbersRepository;
+    }
 
     @Override
     @Transactional
-    public PlayNumbers generateNumbers(Integer quantity, String email) {
+    public LotteryNumbers generateNumbers(Integer quantity, String email) {
         Optional<Person> obj = personRepository.findByEmail(email);
 
         Person person = new Person();
@@ -33,16 +38,15 @@ public class NumberServiceImpl implements NumberService {
             personRepository.save(person);
         }
 
-        PlayNumbers playNumbers = new PlayNumbers(randomNumbers(quantity));
-        playNumbers.setPerson(person);
+        LotteryNumbers playNumbers = new LotteryNumbers(null, randomNumbers(quantity), person);
+        numbersRepository.save(playNumbers);
 
-        numberRepository.save(playNumbers);
         return playNumbers;
     }
 
     @Override
-    public List<PlayNumbers> getByEmail(String email) {
-        return numberRepository.findByPersonEmail(email);
+    public List<LotteryNumbers> getByEmail(String email) {
+        return numbersRepository.findByPersonEmail(email);
     }
 
     private String randomNumbers(Integer quantity) {
